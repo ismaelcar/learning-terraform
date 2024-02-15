@@ -14,6 +14,62 @@ data "aws_ami" "app_ami" {
   owners = ["979382823631"] # Bitnami
 }
 
+resource "aws_instance" "blog" {
+  ami           = data.aws_ami.app_ami.id
+  instance_type = var.instance_type
+  vpc_security_group_ids = [module.blog_sg.security_group_id]
+
+  subnet_id = module.blog_vpc.public_subnets[0]
+
+  tags = {
+    Name = "Learning Terraform"
+  }
+}
+
+module "alb" {
+  source = "terraform-aws-modules/alb/aws"
+
+  name            = "blog-alb"
+  vpc_id          = module.blog_vpc.vpc_id
+  subnets         = module.blog_vpc.public_subnets
+  security_groups = module.blog_sg.security_group_id
+
+  target_groups = {
+    ex-instance = {
+      name_prefix      = "blog-"
+      protocol         = "HTTP"
+      port             = 80
+      target_type      = "instance"
+    }
+  }
+
+
+  http_tcp_listeners = [
+    {
+      port               = 80
+      protocol           = "HTTP"
+      target_group_index = 0
+    }
+  ]
+
+  #listeners = {
+  #  ex-http-https-redirect = {
+  #    port     = 80
+   #   protocol = "HTTP"
+    #  redirect = {
+     #   port        = "443"
+      #  protocol    = "HTTPS"
+       # status_code = "HTTP_301"
+    #  }
+    #}
+  #}
+
+  tags = {
+    Environment = "Development"
+    Project     = "Example"
+  }
+}
+
 module "blog_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -26,18 +82,6 @@ module "blog_vpc" {
   tags = {
     Terraform = "true"
     Environment = "dev"
-  }
-}
-
-resource "aws_instance" "blog" {
-  ami           = data.aws_ami.app_ami.id
-  instance_type = var.instance_type
-  vpc_security_group_ids = [module.blog_sg.security_group_id]
-
-  subnet_id = module.blog_vpc.public_subnets[0]
-
-  tags = {
-    Name = "Learning Terraform"
   }
 }
 
