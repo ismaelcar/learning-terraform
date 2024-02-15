@@ -32,7 +32,7 @@ module "alb" {
   name            = "blog-alb"
   vpc_id          = module.blog_vpc.vpc_id
   subnets         = module.blog_vpc.public_subnets
-  security_groups = module.blog_sg.security_group_id
+  security_groups = [module.blog_sg.security_group_id]
 
   target_groups = {
     ex-instance = {
@@ -40,29 +40,23 @@ module "alb" {
       protocol         = "HTTP"
       port             = 80
       target_type      = "instance"
+        my_target = {
+          target_id = aws_instance.blog.id
+        }
     }
   }
 
-
-  http_tcp_listeners = [
-    {
-      port               = 80
-      protocol           = "HTTP"
-      target_group_index = 0
+  listeners = {
+    ex-http-https-redirect = {
+      port     = 80
+      protocol = "HTTP"
+      redirect = {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
     }
-  ]
-
-  #listeners = {
-  #  ex-http-https-redirect = {
-  #    port     = 80
-   #   protocol = "HTTP"
-    #  redirect = {
-     #   port        = "443"
-      #  protocol    = "HTTPS"
-       # status_code = "HTTP_301"
-    #  }
-    #}
-  #}
+  }
 
   tags = {
     Environment = "Development"
