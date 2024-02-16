@@ -22,7 +22,7 @@ resource "aws_instance" "blog" {
   subnet_id = module.blog_vpc.public_subnets[0]
 
   tags = {
-    Name = "Learning Terraform"
+    Name = "aaaaaaaaaaaaak"
   }
 }
 
@@ -30,7 +30,7 @@ module "blog_autoscaling" {
   source  = "terraform-aws-modules/autoscaling/aws"
   version = "7.3.1"
   
-  name                = "${var.environment.name}-blog"
+  name                = "${var.environment.name}-blog-escalated"
   min_size            = var.asg_min_size
   max_size            = var.asg_max_size
   vpc_zone_identifier = module.blog_vpc.public_subnets
